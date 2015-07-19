@@ -1,0 +1,13 @@
+<script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+<script>
+  	var socket = io('192.168.0.108');
+  	var address="192.168.0.108";//mediabrowser
+	var authenticate="/mediabrowser/Users/public?format=json";
+	var header='Authorization=MediaBrowser UserId="e8837bc1-ad67-520e-8cd2-f629e3155721", Client="Android", Device="Samsung Galaxy SIII", DeviceId="device", Version="1.0.0.0"';
+  	
+  	socket.emit(address+authenticate, {header:header});
+  	
+  	socket.on('news', function (data) {
+   	 	console.log(data);
+  	});
+</script>

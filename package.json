@@ -1,0 +1,19 @@
+{
+  "name": "duneclient",
+  "version": "1.0.0",
+  "description": "Facilitates handshake between EMBY and Dune Player",
+  "main": "index.js",
+  "dependencies": {
+    "udp-discovery": "^0.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Dune",
+    "EMBY"
+  ],
+  "author": "Daniel Stahl",
+  "license": "ISC"
+}
