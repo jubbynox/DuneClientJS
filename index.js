@@ -1,107 +1,86 @@
 var os=require('os');
-var dgram = require('dgram');
+//var dgram = require('dgram');
 var http=require('http');
-var sha1 = require('sha1');
-var md5 = require('md5');
-var request = require('request');
+var express=require('express');
+var ejs=require('ejs');
+var bodyParser = require('body-parser');
+var emby=require('EMBYInterface');
+var dune=require('DUNEInterface');
+var fs = require('fs');//filesystem
+var app=express();
+//var sha1 = require('sha1');
+//var md5 = require('md5');
+app.use(bodyParser.json());
+app.engine('html', ejs.__express);
+app.set('view engine', 'html');
 
-
-//var app = http.createServer(handler)
-//var io = require('socket.io')(app);
-
-//var userId; //emby variable
-var deviceId="77f6b3d2-3208-4e5d-a625-d20d3a97b2bb"; //emby variable
-var client="Android";//emby variable
-var version="1.0.0.2";//emby variable
-var device="Dune Player 2"; //emby variable
-//var sessionId;
-var password="herbert";
-var ip="192.168.0.108";
-var port="8096";
-
-
-//this kicks off everything...gets users
-http.get(
-	{
-		host: ip,
-		port:port,
-		path: "/mediabrowser/Users/public?format=json"
-	},
-	getUserIDs);
-
-function getUserIDs(res){
-		var res_data = '';
-  	res.on('data', function(chunk) {
-    	res_data += chunk;
-  	});
-  	res.on('end', function() {
-    	res_data=JSON.parse(res_data);
-    	var defaultUserId=res_data[0].Id;//at some point, let this be picked during options of webbrowser
-    	var defaultName=res_data[0].Name;
-    	//console.log(res_data);
-    	authenticate(defaultName, defaultUserId);
-  	});
-}
-function authenticate(name, userId){
-	var host=ip+":"+port;
-	var content={username:name, password:sha1(password)};
-	var url="http://"+host+"/mediabrowser/Users/AuthenticateByName?format=json";
-	var header=getHeader(userId);
-	request({
-		url:url,
-		method:'post',
-		json:content,
-		headers:header,
-	}, function(err, res, body){getAccessToken(err, res, body, userId);});
+var settings="settings.dune";
+var defaultPort=3000;
+var embyPort=8096;
+var currentData={};
+var isRunning=false;
+function testFile(params){ //cant figure out how to test this...
+    
 
 }
-function getHeader(userId){
-	return {"Authorization":'MediaBrowser UserId="'+userId+'", Client="'+client+'", Device="'+device+'", DeviceId="'+deviceId+'", Version="'+version+'"', "content-type": "application/json"};
+fs.readFile(settings, {encoding:"utf8"}, function(err, data){
+    if(err){
+        currentData={Html:{PORT:defaultPort}, Server:{PORT:embyPort, IP:"", PASSWORD:""}, Dune:{IP:""}, Video:{IP:"", PASSWORD:"", USERNAME:""}, Audio:{IP:"", PASSWORD:"", USERNAME:""}};
+        //data.html={};
+       // data.html.port=defaultPort;
+        fs.appendFile(settings, JSON.stringify(currentData));
+    }
+    else {
+        currentData=JSON.parse(data);
+    }
+    emby=new emby(currentData);
+    var server = app.listen(currentData.Html.PORT, function () {
+        var host = server.address().address;
+        var port = server.address().port;
+        console.log('Dune client app listening at http://%s:%s', host, port);
+    });
+});
+function getSettings(res){
+    fs.readFile(settings, function(err, data){
+        if(err){
+            //fs.appendFile(settings, JSON.stringify({html:{port:defaultPort}})); //default setting
+            console.log(err);
+        }
+        else {
+            //var relevantData=JSON.parse(data);
+            var dataToSend=JSON.parse(data);
+            //console.log(dataToSend);
+            dataToSend.running=emby.isRunning();
+            res.render("index", {data:dataToSend});
+        }
+    });
 }
-function getAccessToken(err, res, body, userId){ //retreives access token and gets session attributes
-	var accessToken=res.body.AccessToken;
-	var url="http://"+ip+":"+port+ "/mediabrowser/Sessions?DeviceId=" + deviceId + "&format=json";
-	var header=getHeader(userId);
-	header["X-MediaBrowser-Token"]=accessToken;
-	request({
-		url:url,
-		method:'get',
-		headers:header,
-		json:true
-	}, function(err, res, body){duneInterface(err, res, body, userId, accessToken);});
+app.post('/testEmby', function(req, res){
+    console.log(req.body);
+    currentData.Server=req.body;
+    emby.setAuthentication(currentData);
+    emby.testConnection(function(data){res.send({result:data});});
+});
+app.post('/save', function(req, res){
+    console.log(req.body);
+    currentData=req.body;
+    fs.writeFile(settings, JSON.stringify(currentData), function(err, data){
+        if(err){
+            res.send(err);
+            //console.log(err);
+        }
+        else {
+            res.send({result:"Success"});
+        }
+    });
+});
+app.post('/start', function(req, res){
+    emby.setClient(new dune(currentData));
+    emby.launch(function(data){res.send({result:data});});
+    
+});
 
-}
-function setSession(userId, accessToken){
-		console.log("I got here!");
-		//var sessionId=res.body[0].Id;
-		var header=getHeader(userId);
-		header["X-MediaBrowser-Token"]=accessToken;
-		var url = "http://"+ip+":"+port+ "/mediabrowser/Sessions/Capabilities/Full";//?format=json";
-		var supportedCommands="Play,Playstate,SendString,DisplayMessage,PlayNext";
-		var playableMediaTypes = "Audio,Video";
-		var content={
-			//"Id":sessionId,
-			"PlayableMediaTypes":playableMediaTypes,
-			"SupportedCommands": supportedCommands,
-			"SupportsMediaControl":true
-			//"SupportsRemoteControl":true //for some reason, this isn't "catching"
-		};
-		//console.log(content);
-		request({
-			url:url,
-			method:'post',
-			json: content,
-			headers:header
-		}, function(err, res, body){duneInterface(err, res, body, accessToken, userId);});
-}
-function duneInterface(err, res, body,  userId, accessToken){
-	//console.log(err); //no error...
-	//console.log(body); //no body..
-
-	var socket=require('socket.io-client')("ws://"+ip+":"+port+"?api_key="+accessToken+"&deviceId="+deviceId);
-	socket.on('connect', function(){setSession(userId, accessToken);});
-	socket.on('disconnect', function(data){console.log(data);});
-	socket.on('event', function(data){
-		console.log(data);
-	});
-}
+app.get('/', function(req, res){
+    getSettings(res);
+    //res.render("index");
+});

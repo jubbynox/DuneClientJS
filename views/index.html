@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <!--
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.js"></script>-->
+        
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">    
+
+    </head>
+    <body>
+        <div class='jumbotron'>
+            <div class='container'>
+                <h2> Dune-Emby Controller </h2>
+                <h4> Control your Dune from Emby!</h4>
+            </div>
+        </div>
+        <div class='container'>
+    
+            <form class="form-horizontal" id='main'>
+                
+                    
+                
+                <!--<button type="submit" class="pure-button pure-button-primary">Submit</button>-->
+            </form> 
+        </div>
+    </body>
+    <script>
+       // $('document').ready(function(){
+        var myData=<%- JSON.stringify(data) %>;            
+        console.log(myData);
+        var keys=Object.keys(myData);
+        var n=keys.length;
+        var html="";
+        for(var i=0; i<n; i++){
+            var keysi=Object.keys(myData[keys[i]]);
+            html=html+"<fieldset>";
+            var m=keysi.length;
+            for(var j=0; j<m; j++){
+                html=html+"<div class='form-group'><label for='"+keys[i]+keysi[j]+"' class='col-sm-2'>"+keys[i]+" "+keysi[j]+"</label>";
+                html=html+"<div class='col-sm-10'><input type='"+keysi[j].toLowerCase()+"' id='"+keys[i]+keysi[j]+"' class='"+keys[i]+" "+keysi[j]+" form-control' placeholder='"+keysi[j]+"' value='"+myData[keys[i]][keysi[j]]+"'></div></div>";
+            }
+            html=html+"</fieldset>";
+        }
+        html=html+"<div class='form-group'><button class='btn btn-warning' id='testEmby' >Test</button><button class='btn btn-success' id='save' >Save</button></div>";
+        var buttontext="Start Controller";
+        if(myData.running){
+            buttontext="Restart Controller";
+        }
+        html=html+"<div class='form-group'><button class='btn btn-primary' id='start' >"+buttontext+"</button></div>";
+        var dom=document.getElementById('main');
+        dom.innerHTML=html;
+        window.dispatchEvent(new Event('resize'));
+        document.getElementById('testEmby').addEventListener("click", test);
+        document.getElementById('save').addEventListener("click", save);
+        document.getElementById('start').addEventListener("click", start);
+    
+        function test(e){
+            e.preventDefault();
+            var eIP=$('#ServerIP').val();
+            var ePort=$('#ServerPORT').val();
+            var ePassword=$('#ServerPASSWORD').val();
+            $.ajax({
+                url:"testEmby", 
+                contentType:"application/json",
+                data:JSON.stringify({IP:eIP, PORT:ePort, PASSWORD:ePassword}),
+                dataType:'json',
+                method:'POST',
+                success:function(data){
+                    alert(data.result);
+                    console.log(data);
+                },
+                error:function(data){
+                    console.log(data);
+                }
+             });
+            //return false;
+        
+        }
+        
+        function save(e){
+            e.preventDefault();
+            var savedElement={};
+            $('input').each(function(index, val){
+                var dom=$(this);
+                var input=dom.attr('class').split(" ");
+                if(!savedElement[input[0]]){
+                    savedElement[input[0]]={};
+                }
+                savedElement[input[0]][input[1].toUpperCase()]=dom.val();
+                
+            });
+            console.log(savedElement);
+           $.ajax({
+                url:"save", 
+                contentType:"application/json",
+                data:JSON.stringify(savedElement),
+                dataType:'json',
+                method:'POST',
+                success:function(data){
+                    alert(data.result);
+                    console.log(data);
+                },
+                error:function(data){
+                    console.log(data);
+                }
+            });
+            
+            
+        }
+        function start(e){
+            e.preventDefault();
+            
+            $.ajax({
+                url:"start", 
+                contentType:"application/json",
+                data:JSON.stringify({}),
+                dataType:'json',
+                method:'POST',
+                success:function(data){
+                    alert(data.result);
+                    document.getElementById('start').value="Restart Controller";
+                },
+                error:function(data){
+                    console.log(data);
+                }
+            });
+            
+            
+        }
+    
+    
+    </script>
+
+</html>
