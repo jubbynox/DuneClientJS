@@ -19,10 +19,6 @@ var defaultPort=3000;
 var embyPort=8096;
 var currentData={};
 var isRunning=false;
-function testFile(params){ //cant figure out how to test this...
-    
-
-}
 fs.readFile(settings, {encoding:"utf8"}, function(err, data){
     if(err){
         currentData={Html:{PORT:defaultPort}, Server:{PORT:embyPort, IP:"", PASSWORD:""}, Dune:{IP:""}, Video:{IP:"", PASSWORD:"", USERNAME:""}, Audio:{IP:"", PASSWORD:"", USERNAME:""}};
@@ -34,6 +30,8 @@ fs.readFile(settings, {encoding:"utf8"}, function(err, data){
         currentData=JSON.parse(data);
     }
     emby=new emby(currentData);
+    emby.setClient(new dune(currentData));
+    emby.launch(function(data){});
     var server = app.listen(currentData.Html.PORT, function () {
         var host = server.address().address;
         var port = server.address().port;
@@ -79,7 +77,6 @@ app.post('/start', function(req, res){
     emby.launch(function(data){res.send({result:data});});
     
 });
-
 app.get('/', function(req, res){
     getSettings(res);
     //res.render("index");

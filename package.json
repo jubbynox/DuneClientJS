@@ -4,7 +4,13 @@
   "description": "Facilitates handshake between EMBY and Dune Player",
   "main": "index.js",
   "dependencies": {
-    "udp-discovery": "^0.0.3"
+    "body-parser": "1.13.2",
+    "ejs": "2.3.3",
+    "express": "4.13.1",
+    "request": "2.58.0",
+    "sha1": "1.1.1",
+    "websocket": "1.0.21",
+    "xml2js": "0.4.9"
   },
   "devDependencies": {},
   "scripts": {
