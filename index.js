@@ -22,15 +22,17 @@ fs.readFile(settings, {encoding:"utf8"}, function(err, data){
         //data.html={};
        // data.html.port=defaultPort;
         fs.appendFile(settings, JSON.stringify(currentData));
+        emby=new emby(currentData);
     }
     else {
         currentData=JSON.parse(data);
+        emby=new emby(currentData);
         if(currentData.Server.IP){ //only load emby if server actually exists in settings
           emby.setClient(new dune(currentData));
           emby.launch(function(data){});
         }
     }
-    emby=new emby(currentData);
+
 
     var server = app.listen(currentData.Html.PORT, function () {
         var host = server.address().address;
