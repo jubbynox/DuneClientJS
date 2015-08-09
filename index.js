@@ -20,7 +20,7 @@ var embyPort=8096;
 var currentData={};
 var isRunning=false;
 fs.readFile(settings, {encoding:"utf8"}, function(err, data){
-    if(err){
+    if(err || !data){
         currentData={Html:{PORT:defaultPort}, Server:{PORT:embyPort, IP:"", PASSWORD:""}, Dune:{IP:""}, Video:{IP:"", PASSWORD:"", USERNAME:""}, Audio:{IP:"", PASSWORD:"", USERNAME:""}};
         //data.html={};
        // data.html.port=defaultPort;
@@ -75,7 +75,7 @@ app.post('/save', function(req, res){
 app.post('/start', function(req, res){
     emby.setClient(new dune(currentData));
     emby.launch(function(data){res.send({result:data});});
-    
+
 });
 app.get('/', function(req, res){
     getSettings(res);
