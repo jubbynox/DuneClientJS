@@ -1,5 +1,4 @@
 var os=require('os');
-//var dgram = require('dgram');
 var http=require('http');
 var express=require('express');
 var ejs=require('ejs');
@@ -8,8 +7,6 @@ var emby=require('EMBYInterface');
 var dune=require('DUNEInterface');
 var fs = require('fs');//filesystem
 var app=express();
-//var sha1 = require('sha1');
-//var md5 = require('md5');
 app.use(bodyParser.json());
 app.engine('html', ejs.__express);
 app.set('view engine', 'html');
@@ -28,10 +25,13 @@ fs.readFile(settings, {encoding:"utf8"}, function(err, data){
     }
     else {
         currentData=JSON.parse(data);
+        if(currentData.Server.IP){ //only load emby if server actually exists in settings
+          emby.setClient(new dune(currentData));
+          emby.launch(function(data){});
+        }
     }
     emby=new emby(currentData);
-    emby.setClient(new dune(currentData));
-    emby.launch(function(data){});
+
     var server = app.listen(currentData.Html.PORT, function () {
         var host = server.address().address;
         var port = server.address().port;
