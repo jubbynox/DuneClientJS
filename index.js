@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 app.engine('html', ejs.__express);
 app.set('view engine', 'html');
 
-var settings="settings.dune";
+var settings="~/Documents/nodejs/DuneClient/settings.dune";
 var defaultPort=3000;
 var embyPort=8096;
 var currentData={};
