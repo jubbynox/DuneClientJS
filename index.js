@@ -2,6 +2,7 @@ var os=require('os');
 var http=require('http');
 var express=require('express');
 var ejs=require('ejs');
+//var path=require('path');
 var bodyParser = require('body-parser');
 var emby=require('EMBYInterface');
 var dune=require('DUNEInterface');
@@ -11,7 +12,7 @@ app.use(bodyParser.json());
 app.engine('html', ejs.__express);
 app.set('view engine', 'html');
 
-var settings="~/Documents/nodejs/DuneClientJS/settings.dune";
+var settings=__dirname+"/settings.dune";
 var defaultPort=3000;
 var embyPort=8096;
 var currentData={};
