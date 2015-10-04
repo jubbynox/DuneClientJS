@@ -52,7 +52,7 @@ function getSettings(res){
             var dataToSend=JSON.parse(data);
             //console.log(dataToSend);
             dataToSend.running=emby.isRunning();
-            res.render("index", {data:dataToSend});
+            res.render(__dirname+"/views/index", {data:dataToSend});
         }
     });
 }
